@@ -1,0 +1,25 @@
+# Python-specific files and folders
+__pycache__/
+*.pyc
+*.pyo
+*~
+.ipynb_checkpoints/
+.pytest_cache/
+.coverage
+
+# Virtual Environment
+.venv/
+venv/
+env/
+
+# Editor and IDE-specific files
+.vscode/
+.idea/
+.DS_Store
+
+# Temporary files
+*.swp
+*.tmp
+
+# Operating System specific files
+.env
