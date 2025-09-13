@@ -17,8 +17,8 @@ The tool has two primary functions:
 
 1.  **Clone the Repository:**
     ```bash
-    git clone [https://github.com/Shafiyullah/Automate-Software-Configuration-And-Version-Control-System.git](https://github.com/Shafiyullah/Automate-Software-Configuration-And-Version-Control-System.git)
-    cd your-repo-name
+    git clone https://github.com/Shafiyullah/Automate-Software-Configuration-And-Version-Control-System.git (https://github.com/Shafiyullah/Automate-Software-Configuration-And-Version-Control-System.git)
+    
     ```
 2.  **Edit Configuration:**
     Open `config.py` and modify the `PACKAGES_TO_INSTALL` list with the software you need for your new project.
