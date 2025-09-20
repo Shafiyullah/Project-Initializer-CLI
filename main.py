@@ -1,7 +1,13 @@
 import subprocess
 import os
 import sys
-import config
+
+# --- Configuration ---
+try:
+    import config
+except ImportError:
+    print("FATAL: config.py not found. Please create it from the template.")
+    sys.exit(1)
 
 def install_packages():
     """
