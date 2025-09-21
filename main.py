@@ -89,11 +89,17 @@ def main():
         print("This script is designed for Linux-based systems. Exiting.")
         sys.exit(1)
 
-    install_packages()
-    setup_version_control()
+    #install_packages()
 
-    print("\n--- Automation Complete ---")
-    print("The system has successfully configured software and set up a Git repository.")
+    # Setup Version Control
+    setup_version_control(
+        repo_path=config.REPO_PATH,
+        initial_files=config.INITIAL_FILES,
+        commit_message=config.COMMIT_MESSAGE
+    )
+
+    logging.info("\n--- Automation Complete ---")
+    logging.info("Review 'setup.log' for a detailed record of all operations.")
 
 if __name__ == "__main__":
     main()
