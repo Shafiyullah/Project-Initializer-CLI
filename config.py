@@ -53,6 +53,7 @@ PACKAGES_TO_INSTALL = {
 REPO_PATH = "my-cross-platform-project"
 
 # A list of files to create and add to the initial commit.
+# User can modify as they want to initial the any type of files in the list. 
 INITIAL_FILES = [
     "README.md",
     "main.py",
