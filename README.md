@@ -31,6 +31,9 @@ Follow these steps to use the automation tool for your projects.
 1. **Clone the Repository:**
     ```bash
     git clone https://github.com/Shafiyullah/Automate-Software-Configuration-And-Version-Control-System.git
+    ```
+
+    ```bash
     cd Automate-Software-Configuration-And-Version-Control-System
     ```
 
@@ -42,7 +45,6 @@ Follow these steps to use the automation tool for your projects.
     ```bash
     ./setup.sh
     ```
-    *Note: You may be prompted for your password to allow package installation.*
 
 ---
 
