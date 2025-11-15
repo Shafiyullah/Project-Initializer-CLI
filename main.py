@@ -5,6 +5,7 @@ import logging
 import shutil
 import platform
 from typing import List, Dict, Optional
+from pathlib import Path
 
 # --- Configuration ---
 try:
@@ -113,7 +114,6 @@ def install_packages(package_manager: str, packages_config: Dict[str, List[str]]
             subprocess.run(cmd_map["update"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
         except subprocess.CalledProcessError as e:
             logging.error(f"Failed to update package lists. Error: {e.stderr.decode().strip()}")
-            # Continue to package installation even if update fails
             
     for package in packages:
         logging.info(f"Processing package: {package}...")
@@ -121,9 +121,8 @@ def install_packages(package_manager: str, packages_config: Dict[str, List[str]]
             # For package managers that check by name (apt, dnf, yum, pacman), use the package string
             if package_manager in ["apt-get", "yum", "dnf", "pacman"]:
                  check_cmd = [*cmd_map["check"], package.split(" ")[0]]
-            # Winget/Brew check logic is unique
             elif package_manager == "winget":
-                 check_cmd = [*cmd_map["check"], package] # Winget checks by ID
+                 check_cmd = [*cmd_map["check"], package]
             elif package_manager == "brew":
                 check_cmd = [*cmd_map["check"], package]
             
@@ -149,9 +148,10 @@ def install_packages(package_manager: str, packages_config: Dict[str, List[str]]
                 logging.error(f"> Failed to install '{package}'. Please check permissions or package name.")
                 logging.error(f"  Error details: {e.stderr.decode().strip()}")
 
-def setup_version_control(repo_path: str, initial_files: List[str], commit_message: str):
+
+def initialize_git_repo(repo_path: str, initial_files: List[str]):
     """
-    Automates the initialization of a Git repository, adds specified files, and makes a commit.
+    Creates the project directory, initializes Git, and creates initial files.
     """
     logging.info("\n--- Automated Version Control Setup ---")
 
@@ -159,16 +159,18 @@ def setup_version_control(repo_path: str, initial_files: List[str], commit_messa
         logging.error("Git is not installed or not in PATH. Skipping version control setup.")
         return
 
+    # This is the one place we need the original path
     original_path = os.getcwd()
+    
+    if not os.path.exists(repo_path):
+        os.makedirs(repo_path)
+        logging.info(f"Created directory: {repo_path}")
+    else:
+        logging.warning(f"Directory '{repo_path}' already exists. Using it.")
+
+    # Temporarily change to repo path to initialize
     try:
-        if not os.path.exists(repo_path):
-            os.makedirs(repo_path)
-            logging.info(f"Created directory: {repo_path}")
-        else:
-            logging.warning(f"Directory '{repo_path}' already exists. Using it.")
-
         os.chdir(repo_path)
-
         if not os.path.exists(".git"):
             logging.info("Initializing Git repository...")
             subprocess.run(['git', 'init'], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
@@ -185,19 +187,7 @@ def setup_version_control(repo_path: str, initial_files: List[str], commit_messa
                     with open(file_name, "w") as f:
                         f.write(f"# This is an automatically generated {file_name} file.\n")
                     logging.info(f"Created file: '{file_name}'")
-
-        if initial_files:
-            logging.info("Adding files to staging area...")
-            subprocess.run(['git', 'add', *initial_files], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-        # Check for staged changes before committing
-        status_result = subprocess.run(['git', 'status', '--porcelain'], capture_output=True, text=True)
-        if status_result.stdout:
-            logging.info("Committing changes...")
-            subprocess.run(['git', 'commit', '-m', commit_message], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
-            logging.info("Initial commit successful.")
-        else:
-            logging.info("No changes to commit.")
+    
     except subprocess.CalledProcessError as e:
         logging.error(f"Failed to perform Git operation. Error: {e.stderr.decode().strip()}")
     except Exception as e:
@@ -205,20 +195,98 @@ def setup_version_control(repo_path: str, initial_files: List[str], commit_messa
     finally:
         os.chdir(original_path)
 
-def setup_virtual_environment(repo_path: str, venv_name: str, pip_packages: List[str]):
+
+def setup_environment_variables(env_vars_config: dict):
     """
-    Feature: Creates and activates a Python virtual environment and installs specified packages.
+    Feature: Configures environment variables from config.py.
+    (Operates in the current working directory, expected to be REPO_PATH)
+    """
+    logging.info("\nAutomated Environment Variable Setup")
+    
+    # 1. Setup project-specific .env file (now uses relative path)
+    project_vars = env_vars_config.get("project_env", {})
+    if project_vars:
+        env_file_path = ".env"
+        logging.info(f"Writing project variables to: {env_file_path}")
+        
+        existing_keys = set()
+        if os.path.exists(env_file_path):
+            try:
+                with open(env_file_path, 'r', encoding='utf-8') as f:
+                    for line in f:
+                        if '=' in line:
+                            existing_keys.add(line.split('=', 1)[0].strip())
+            except Exception as e:
+                logging.error(f"Could not read existing .env file: {e}")
+
+        try:
+            with open(env_file_path, 'a', encoding='utf-8') as f:
+                for key, value in project_vars.items():
+                    if key not in existing_keys:
+                        f.write(f"{key}=\"{value}\"\n")
+                        logging.info(f"> Added '{key}' to .env")
+                    else:
+                        logging.info(f"> Skipping '{key}', already exists in .env")
+        except Exception as e:
+            logging.error(f"Failed to write to .env file: {e}")
+
+    # 2. Setup system-wide shell profile variables
+    profile_lines = env_vars_config.get("shell_profile", [])
+    if not profile_lines:
+        return
+
+    if platform.system() == "Windows":
+        logging.warning("Shell profile setup on Windows is not automated.")
+        logging.warning("Please set these variables manually:")
+        for line in profile_lines:
+            logging.warning(f"  > {line}")
+        return
+
+    try:
+        home_dir = Path.home()
+        shell = os.environ.get("SHELL", "")
+        profile_file = None
+
+        if "bash" in shell:
+            profile_file = home_dir / ".bashrc"
+        elif "zsh" in shell:
+            profile_file = home_dir / ".zshrc"
+        else:
+            profile_file = home_dir / ".profile" # Default fallback
+        
+        logging.info(f"Appending shell profile variables to: {profile_file}")
+        
+        existing_content = ""
+        if os.path.exists(profile_file):
+            with open(profile_file, 'r', encoding='utf-8') as f:
+                existing_content = f.read()
+
+        with open(profile_file, 'a', encoding='utf-8') as f:
+            f.write("\n")
+            for line in profile_lines:
+                if line in existing_content:
+                    logging.info(f"> Skipping line, already in profile: '{line}'")
+                else:
+                    f.write(f"{line}\n")
+                    logging.info(f"> Added to shell profile: '{line}'")
+        
+        logging.info(f"Shell profile updated. Please run 'source {profile_file}' or restart your terminal.")
+
+    except Exception as e:
+        logging.error(f"Failed to update shell profile: {e}")
+
+
+def setup_virtual_environment(venv_name: str, pip_packages: List[str]):
+    """
+    Feature: Creates a Python venv and installs packages.
+    (Operates in the current working directory, expected to be REPO_PATH)
     """
     if not config.CREATE_VENV:
         return
 
     logging.info("\nAutomated Python Environment Setup")
     
-    original_path = os.getcwd()
     try:
-        os.chdir(repo_path)
-        
-        # 1. Create venv
         if not os.path.exists(venv_name):
             logging.info(f"Creating virtual environment: '{venv_name}'...")
             subprocess.run([sys.executable, '-m', 'venv', venv_name], check=True, capture_output=True)
@@ -249,40 +317,140 @@ def setup_virtual_environment(repo_path: str, venv_name: str, pip_packages: List
                 
     except Exception as e:
         logging.error(f"An unexpected error occurred during venv setup: {e}")
-    finally:
-        os.chdir(original_path)
+
+
+def execute_post_setup_hooks(venv_name: str, commands: List[str]):
+    """
+    Feature: Executes shell commands, using venv paths if they exist.
+    (Operates in the current working directory, expected to be REPO_PATH)
+    """
+    if not commands:
+        return
+
+    logging.info("\n--- Executing Post-Setup Hooks ---")
+    
+    try:
+        # Determine paths for venv executables
+        if platform.system() == "Windows":
+            python_exec = os.path.join(venv_name, "Scripts", "python.exe")
+            pip_exec = os.path.join(venv_name, "Scripts", "pip.exe")
+        else:
+            python_exec = os.path.join(venv_name, "bin", "python")
+            pip_exec = os.path.join(venv_name, "bin", "pip")
+
+        # Fallback to system python/pip if venv doesn't exist
+        if not os.path.exists(python_exec):
+            logging.warning(f"Venv python '{python_exec}' not found. Falling back to system 'python3'.")
+            python_exec = "python3"
+            
+        if not os.path.exists(pip_exec):
+            logging.warning(f"Venv pip '{pip_exec}' not found. Falling back to system 'pip3'.")
+            pip_exec = "pip3"
+
+        for command in commands:
+            # Replace placeholders
+            cmd_to_run = command.replace("{{VENV_PYTHON}}", python_exec)
+            cmd_to_run = cmd_to_run.replace("{{VENV_PIP}}", pip_exec)
+            
+            logging.info(f"Running hook: '{cmd_to_run}'...")
+            try:
+                # Use shell=True for convenience with commands like 'pip freeze > file'
+                subprocess.run(cmd_to_run, shell=True, check=True, capture_output=True, text=True)
+                logging.info(f"> Hook executed successfully.")
+            except subprocess.CalledProcessError as e:
+                logging.error(f"> Hook failed: {cmd_to_run}")
+                logging.error(f"  Error: {e.stderr.strip()}")
+                
+    except Exception as e:
+        logging.error(f"An unexpected error occurred during post-setup hooks: {e}")
+
+
+def commit_final_changes(commit_message: str):
+    """
+    Adds all new files and creates the final initial commit.
+    (Operates in the current working directory, expected to be REPO_PATH)
+    """
+    if not shutil.which("git"):
+        logging.warning("Git not found, skipping final commit.")
+        return
+        
+    logging.info("\n--- Finalizing Git Repository ---")
+    try:
+        logging.info("Adding all new files to staging...")
+        subprocess.run(['git', 'add', '.'], check=True, capture_output=True)
+        
+        status_result = subprocess.run(['git', 'status', '--porcelain'], capture_output=True, text=True)
+        if status_result.stdout:
+            logging.info("Committing all changes...")
+            subprocess.run(['git', 'commit', '-m', commit_message], check=True, capture_output=True)
+            logging.info("Project files successfully committed.")
+        else:
+            logging.info("No changes detected. Skipping final commit.")
+            
+    except subprocess.CalledProcessError as e:
+        logging.error(f"Failed to perform final Git commit. Error: {e.stderr.decode().strip()}")
+    except Exception as e:
+        logging.error(f"An unexpected error occurred: {e}")
+
 
 def main():
     """Main entry point for the automation script."""
     logging.info(f"Running on: {platform.system()} ({platform.release()})")
-
-    # Install Packages
-    pkg_manager = get_package_manager()
-    if pkg_manager:
-        logging.info(f"Detected package manager: '{pkg_manager}'")
-        if not is_admin() and platform.system() != "Windows":
-            logging.warning("Script not run as root. Sudo password may be required for installation.")
-        elif platform.system() == "Windows" and not is_admin():
-            logging.warning("Script not run as Administrator. Elevation may be required.")
-        install_packages(pkg_manager, config.PACKAGES_TO_INSTALL)
-    else:
-        logging.error("Could not detect a supported package manager. Skipping package installation.")
-
-    # Setup Version Control
-    setup_version_control(
-        repo_path=config.REPO_PATH,
-        initial_files=config.INITIAL_FILES,
-        commit_message=config.COMMIT_MESSAGE
-    )
+    original_path = os.getcwd() # Store starting directory
     
-    # Feature: Setup Virtual Environment
-    if config.CREATE_VENV:
-        setup_virtual_environment(
+    try:
+        # 1. Install system-wide packages
+        pkg_manager = get_package_manager()
+        if pkg_manager:
+            logging.info(f"Detected package manager: '{pkg_manager}'")
+            if not is_admin() and platform.system() != "Windows":
+                logging.warning("Script not run as root. Sudo password may be required for installation.")
+            elif platform.system() == "Windows" and not is_admin():
+                logging.warning("Script not run as Administrator. Elevation may be required.")
+            install_packages(pkg_manager, config.PACKAGES_TO_INSTALL)
+        else:
+            logging.error("Could not detect a supported package manager. Skipping package installation.")
+
+        # 2. Initialize Git repo and create starter files
+        initialize_git_repo(
             repo_path=config.REPO_PATH,
-            venv_name=config.VENV_NAME,
-            pip_packages=config.PIP_PACKAGES
+            initial_files=config.INITIAL_FILES
+        )
+        
+        # Change into the project directory ONCE
+        os.chdir(config.REPO_PATH)
+        logging.info(f"Changed directory to '{os.getcwd()}'")
+        
+        # 3. Setup Environment Variables (.env and shell profile)
+        setup_environment_variables(
+            env_vars_config=config.ENVIRONMENT_VARIABLES
         )
 
+        # 4. Setup Python Virtual Environment
+        if config.CREATE_VENV:
+            setup_virtual_environment(
+                venv_name=config.VENV_NAME,
+                pip_packages=config.PIP_PACKAGES
+            )
+
+        # 5. Run Post-Setup Hooks (e.g., pip freeze)
+        execute_post_setup_hooks(
+            venv_name=config.VENV_NAME,
+            commands=config.POST_SETUP_COMMANDS
+        )
+        
+        # 6. Create the final commit with all generated files
+        commit_final_changes(
+            commit_message=config.COMMIT_MESSAGE
+        )
+        
+    except Exception as e:
+        logging.error(f"A fatal error occurred: {e}", exc_info=True)
+    finally:
+        # Always return to the original directory
+        os.chdir(original_path)
+        logging.info(f"Changed directory back to '{original_path}'")
+        
     logging.info("\n--- Automation Complete ---")
     logging.info("Review 'setup.log' for a detailed record of all operations.")
 
