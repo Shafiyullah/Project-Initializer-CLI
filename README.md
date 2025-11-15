@@ -12,7 +12,9 @@ The tool has two primary functions:
 
 * **Cross-Platform Support**: The tool automatically detects the system's package manager (`apt`, `dnf`, `brew`, `winget`, etc.) and installs the correct packages.
 * **Idempotent Package Installation**: The tool intelligently checks for existing packages, **preventing redundant installations** and ensuring a clean setup.
+* **Automated Environment Variables**: *New Feature!* It can **securely generate a `.env` file** for project-specific secrets (like API keys) and also **update system-wide shell profiles** (like `.bashrc` or `.zshrc`) for global pathing.
 * **Automated Python Environment**: *New Feature!* It can **optionally create a Python virtual environment** and install necessary project dependencies (`requests`, `numpy`, etc.) via `pip`.
+* **Post-Setup Hooks**: *New Feature!* Define a list of **custom shell commands** (like `pip freeze > requirements.txt` or `npm install`) that run *after* setup but *before* the final commit, ensuring generated files are version-controlled.
 * **Modular Design**: The separation of core logic from user-configurable settings in `config.py` ensures the code is **highly readable and easily maintained**.
 * **Seamless Version Control**: It demonstrates how to **programmatically interact with Git** using Python's `subprocess` module to automate essential version control workflows.
 * **High Portability**: Easily adapt the tool for any project by **simply modifying the `config.py` configuration file**.
