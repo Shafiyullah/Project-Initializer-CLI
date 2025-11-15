@@ -17,11 +17,10 @@ fi
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 cd "$SCRIPT_DIR"
 
-# Run the Python script.
-# We use 'sudo' here to handle potential permission issues for package installation.
-# The 'main.py' script is designed to handle this, but starting with sudo
-# simplifies the user experience.
+# Run the Python script WITHOUT sudo.
+# The main.py script will now ask for a password only if
+# it needs to install system packages.
 echo "Running the main Python automation script..."
-sudo python3 main.py
+python3 main.py
 
 echo "Setup complete. Check setup.log for details."
