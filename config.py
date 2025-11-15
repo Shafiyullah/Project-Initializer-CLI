@@ -26,7 +26,7 @@ PACKAGES_TO_INSTALL = {
         "htop",
         "python3-pip"
     ],
-    "yum": [ # Added yum support based on main.py logic
+    "yum": [
         "git",
         "vim",
         "curl",
@@ -51,36 +51,53 @@ PACKAGES_TO_INSTALL = {
         "vim.vim",
         "Python.Python3",
         "Microsoft.VisualStudioCode"
-        # To find a package ID, run: winget search <appName>
     ]
 }
 
 
 # --- Version Control Setup ---
-# The path for the new project directory and Git repository.
 REPO_PATH = "my-cross-platform-project"
-
-# A list of files to create and add to the initial commit.
-# User can modify as they want to initial the any type of files in the list. 
 INITIAL_FILES = [
     "README.md",
     "main.py",
     ".gitignore",
 ]
+# Modified commit message to reflect it happens at the end
+COMMIT_MESSAGE = "feat: Initial project setup and configuration"
 
-# The message for the first git commit.
-COMMIT_MESSAGE = "Initial project setup via automation script"
-
-# --- Feature: Virtual Environment Setup ---
-# Enable (True/False) the creation of a Python virtual environment.
+# Feature: Virtual Environment Setup
 CREATE_VENV = True
-
-# Name of the virtual environment directory.
 VENV_NAME = ".venv"
-
-# List of Python packages to install into the new environment.
 PIP_PACKAGES = [
     "requests",
-    "numpy"
-    # Add more python packages which user wants specified packages to install.
+    "numpy",
+    "python-dotenv"
+]
+
+# Feature: Environment Variable Setup 
+ENVIRONMENT_VARIABLES = {
+    "project_env": {
+        "DEBUG": "True",
+        "DATABASE_URL": "sqlite:///./test.db",
+        "API_KEY": "YOUR_API_KEY_HERE"
+    },
+    "shell_profile": [
+        "# Added by automation script",
+        "export MY_GLOBAL_TOOL_PATH=\"/opt/my-tools\"",
+    ]
+}
+
+# Feature: Post-Setup Hooks
+# A list of shell commands to run *after* venv creation but *before* the final commit.
+# Commands are run from within the REPO_PATH.
+# Use '{{VENV_PYTHON}}' and '{{VENV_PIP}}' as placeholders.
+POST_SETUP_COMMANDS = [
+    # Generates a requirements.txt file from the installed venv packages
+    "{{VENV_PIP}} freeze > requirements.txt",
+    
+    # Example: Initialize a dbt project (if dbt was in PIP_PACKAGES)
+    # "dbt init my_dbt_project",
+    
+    # Example: Run a test script
+    # "{{VENV_PYTHON}} main.py --test"
 ]
