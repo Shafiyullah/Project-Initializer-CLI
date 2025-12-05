@@ -23,3 +23,6 @@ env/
 
 # Operating System specific files
 .env
+
+# Logs
+*.log
