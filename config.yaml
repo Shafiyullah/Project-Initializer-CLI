@@ -1,0 +1,46 @@
+# Project Initializer Configuration
+
+# --- Default Project Settings ---
+default_repo_name: "my-automated-project"
+commit_message: "feat: Initial project setup via automation"
+
+# --- Software Configuration ---
+# Packages to install based on the package manager
+packages:
+  apt-get: ["git", "vim", "curl", "htop", "python3-pip"]
+  dnf:     ["git", "vim", "curl", "htop", "python3-pip"]
+  yum:     ["git", "vim", "curl", "htop", "python3-pip"]
+  pacman:  ["git", "vim", "curl", "htop", "python-pip"]
+  brew:    ["git", "vim", "curl", "htop"]
+  winget:  ["Git.Git", "vim.vim", "Python.Python3", "Microsoft.VisualStudioCode"]
+
+# --- Project Scaffolding ---
+# Structure to create. null means directory, string means file content.
+structure:
+  src: null
+  tests: null
+  docs: null
+  README.md: "Initial documentation"
+  .gitignore: null  # Will be populated by the script
+  main.py: "# Entry point"
+
+# --- Virtual Environment ---
+create_venv: true
+venv_name: ".venv"
+pip_packages:
+  - "requests"
+  - "numpy"
+  - "python-dotenv"
+
+# --- Environment Variables ---
+environment_variables:
+  project_env:
+    DEBUG: "True"
+    # API_KEY removed for security. Use local .env files.
+  shell_profile:
+    - "# Added by automation script"
+    - "export MY_TOOL_PATH=\"/opt/my-tools\""
+
+# --- Post-Setup Hooks ---
+post_setup_commands:
+  - "{{VENV_PIP}} freeze > requirements.txt"
