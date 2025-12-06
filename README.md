@@ -36,7 +36,7 @@ Follow these steps to use the automation tool for your projects.
     ```
     
     ```bash
-cd Project_Initilizer_CLI
+    cd Project_Initilizer_CLI
     ```
 
 2. **Edit Configuration (Optional):**
