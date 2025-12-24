@@ -12,17 +12,23 @@ packages:
   yum:     ["git", "vim", "curl", "htop", "python3-pip"]
   pacman:  ["git", "vim", "curl", "htop", "python-pip"]
   brew:    ["git", "vim", "curl", "htop"]
-  winget:  ["Git.Git", "vim.vim", "Python.Python3", "Microsoft.VisualStudioCode"]
+  winget:  ["Git.Git", "vim.vim", "Python.Python.3", "Microsoft.VisualStudioCode"]
 
-# --- Project Scaffolding ---
-# Structure to create. null means directory, string means file content.
-structure:
-  src: null
-  tests: null
-  docs: null
-  README.md: "Initial documentation"
-  .gitignore: null  # Will be populated by the script
-  main.py: "# Entry point"
+# --- Project Templates ---
+# Define different project structures here.
+templates:
+  default:
+    src: null
+    tests: null
+    docs: null
+    README.md: "Initial documentation"
+    .gitignore: ""  # Will be populated by the script
+    main.py: "# Entry point"
+  
+  basic:
+    README.md: "# Basic Project"
+    data: null
+    scripts: null
 
 # --- Virtual Environment ---
 create_venv: true
