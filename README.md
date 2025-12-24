@@ -12,12 +12,17 @@ The tool has three primary functions:
 ## Features
 
 * **Cross-Platform Support**: Automatically detects the system's package manager and installs the correct packages.
-* **Smart CLI**: *New Feature!* Use command-line flags (e.g., `--name`) to customize the project setup on the fly without editing code.
-* **Project Scaffolding**: *New Feature!* Define your project's folder structure and starter files in `config.yaml`, and the tool will build the directory tree for you.
-* **Security First**: *New Feature!* Automatically checks and enforces `.gitignore` rules to ensure sensitive files like `.env` and `.venv/` are never committed.
-* **Automated Environment Variables**: Securely generates a `.env` file for project secrets and updates system-wide shell profiles (like `.bashrc`) for global pathing.
-* **Automated Python Environment**: Optionally creates a Python virtual environment and installs necessary project dependencies (`requests`, `numpy`, etc.) via `pip`.
-* **Post-Setup Hooks**: Define custom shell commands (like `pip freeze > requirements.txt` or `npm install`) that run *after* setup but *before* the final commit.
+* **Smart CLI**: Use command-line flags (e.g., `--name`) to customize the project setup.
+* **Project Templates**: *New!* Choose from multiple project structures (e.g., `default`, `basic`, `web`) defined in `config.yaml` using `--template`.
+- **Interactive Mode**: Guided setup for project name, venv, and templates.
+- **Dynamic .gitignore**: Fetch official templates (e.g., `python`, `windows`) from gitignore.io.
+- **Custom Dependencies**: Add extra pip packages on the fly during setup.
+- **Dry Run Mode**: Simulate the entire setup process without creating files.
+- **Force Mode**: *New!* Use `--force` to overwrite existing directories if needed.
+* **Security First**: Automatically checks and enforces `.gitignore` rules to ensure sensitive files like `.env` and `.venv/` are never committed.
+* **Automated Environment Variables**: Securely generates a `.env` file and updates system-wide shell profiles.
+* **Automated Python Environment**: Optionally creates a Python virtual environment and installs dependencies.
+* **Post-Setup Hooks**: Define custom shell commands that run *after* setup but *before* the final commit.
 
 ---
 
@@ -49,6 +54,55 @@ Follow these steps to use the automation tool for your projects.
     ```bash
     python main.py
     ```
+
+    **Dry Run (Simulate):**
+    ```bash
+    python main.py --name my-test-project --dry-run
+    ```
+
+    **Use a Template:**
+    ```bash
+    python main.py --name my-web-app --template web
+    ```
+
+---
+
+## How to Use This Tool: A Simple Guide
+
+This tool is designed to save you time. Here is how and when to use its different features.
+
+### 1. The Easy Way (Interactive Mode)
+**Best for:** Beginners or when you want to customize everything step-by-step.
+Run the command:
+```bash
+python main.py --interactive
+```
+**What will happen?**
+1.  It asks **Where** to create the project.
+2.  It asks for the **Project Name**.
+3.  It asks if you want a **Virtual Environment** (recommended for Python).
+4.  It asks for extra **packages** (like `pandas`, `flask`).
+5.  It checks if you have **Git**.
+6.  It asks what files to ignore (e.g., `python, windows`).
+
+### 2. The Safe Way (Dry Run)
+**Best for:** Testing before doing anything. Use this if you are unsure what the tool will do.
+```bash
+python main.py --name my-test --dry-run
+```
+**What will happen?**
+-   The tool will **print** everything it *would* do (creating folders, installing packages).
+-   **Nothing** is actually created or changed.
+-   Great for verifying your settings!
+
+### 3. The Power User Way (CLI Arguments)
+**Best for:** Automation scripts or when you know exactly what you want.
+```bash
+python main.py --name my-web-app --template web --no-venv
+```
+-   `--template`: Use a specific structure (defined in config.yaml).
+-   `--no-venv`: Skip creating a virtual environment (faster).
+-   `--force`: Overwrite an existing folder if you messed up.
 
 ---
 ## Technology Stack
