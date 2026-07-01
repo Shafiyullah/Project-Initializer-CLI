@@ -2,6 +2,7 @@ import argparse
 import logging
 import os
 import shutil
+from typing import Dict, Any
 from .config_loader import load_config
 from .utils import setup_logging, get_package_manager
 from .core import (
@@ -14,7 +15,7 @@ from .core import (
     final_commit
 )
 
-def interactive_mode(config):
+def interactive_mode(config: Dict[str, Any]) -> Dict[str, Any]:
     """
     Prompts the user for configuration overrides.
     """
@@ -115,7 +116,7 @@ def main():
     # 1. Install System Packages
     mgr = get_package_manager()
     if mgr: 
-        install_packages(mgr, config.get('packages', {}), dry_run=args.dry_run)
+        install_packages(mgr, config.get('packages', {}), dry_run=args.dry_run, package_managers_config=config.get('package_managers'))
 
     # 2. Create Structure & Git Init
     create_project_structure(repo_name, project_structure, dry_run=args.dry_run, force=args.force)

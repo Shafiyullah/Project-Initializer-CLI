@@ -14,6 +14,16 @@ packages:
   brew:    ["git", "vim", "curl", "htop"]
   winget:  ["Git.Git", "vim.vim", "Python.Python.3", "Microsoft.VisualStudioCode"]
 
+# --- Configurable Package Manager Commands ---
+# Override or add package manager commands here.
+# Each manager needs: update (list), install (list), check (list).
+# If not defined, built-in defaults are used.
+# package_managers:
+#   choco:
+#     update: []
+#     install: ["choco", "install", "-y"]
+#     check: ["choco", "list", "--local-only"]
+
 # --- Project Templates ---
 # Define different project structures here.
 templates:
@@ -21,12 +31,12 @@ templates:
     src: null
     tests: null
     docs: null
-    README.md: "Initial documentation"
+    README.md: "# {{project_name}}\n\nCreated by {{author}} on {{date}}.\n"
     .gitignore: ""  # Will be populated by the script
-    main.py: "# Entry point"
+    main.py: "# {{project_name}} - Entry point\n"
   
   basic:
-    README.md: "# Basic Project"
+    README.md: "# {{project_name}}\n"
     data: null
     scripts: null
 
